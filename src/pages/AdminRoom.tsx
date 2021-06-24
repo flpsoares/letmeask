@@ -1,16 +1,17 @@
 /* eslint-disable prettier/prettier */
-import { useParams } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
+
 import { Button } from '../components/Button'
 import { Question } from '../components/Question'
 import { RoomCode } from '../components/RoomCode'
-import { useAuth } from '../hooks/useAuth'
 import { useRoom } from '../hooks/useRoom'
 
 import logoImg from '../assets/images/logo.svg'
 import deleteImg from '../assets/images/delete.svg'
 
-import '../styles/room.scss'
 import { database } from '../services/firebase'
+
+import '../styles/room.scss'
 
 type RoomParams = {
   id: string
@@ -18,16 +19,24 @@ type RoomParams = {
 
 export function AdminRoom() {
   const params = useParams<RoomParams>()
+  const history = useHistory()
 
   const roomId = params.id
 
-  // const { user } = useAuth()
   const { questions, title } = useRoom(roomId)
 
   async function handleDeleteQuestion(questionId: string) {
     if (confirm('Tem certeza que deseja excluir essa pergunta?')) {
       await database.ref(`rooms/${roomId}/questions/${questionId}`).remove()
     }
+  }
+
+  async function handleEndRoom() {
+    await database.ref(`rooms/${roomId}`).update({
+      endedAt: new Date()
+    })
+
+    history.push('/')
   }
 
   return (
@@ -37,7 +46,7 @@ export function AdminRoom() {
           <img src={logoImg} alt="Letmeask" />
           <div>
             <RoomCode code={roomId} />
-            <Button isOutlined>Encerrar sala</Button>
+            <Button onClick={handleEndRoom} isOutlined>Encerrar sala</Button>
           </div>
         </div>
       </header>
